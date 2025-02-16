@@ -17,6 +17,8 @@ var addCmd = &cobra.Command{
 	Run:   addRun,
 }
 
+var priority int
+
 func addRun(cmd *cobra.Command, args []string) {
 	items, err := todo.ReadItems(filename)
 	if err != nil {
@@ -24,9 +26,11 @@ func addRun(cmd *cobra.Command, args []string) {
 	}
 
 	for _, arg := range args {
+		item := todo.Item{Text: arg}
+		item.SetPriority(priority)
 		items = append(
 			items,
-			todo.Item{Text: arg},
+			item,
 		)
 	}
 
@@ -38,14 +42,5 @@ func addRun(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(addCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	addCmd.Flags().IntVarP(&priority, "priority", "p", 2, "priority (1: high, 3: low, 2: default/normal)")
 }

@@ -8,7 +8,19 @@ import (
 )
 
 type Item struct {
-	Text string `json:"text"`
+	Text     string `json:"text"`
+	Priority int    `json:"priority"`
+}
+
+func (i *Item) SetPriority(pri int) {
+	switch pri {
+	case 1:
+		i.Priority = 1
+	case 3:
+		i.Priority = 3
+	default:
+		i.Priority = 2
+	}
 }
 
 // SaveItems saves a list of todo items to a JSON file.
