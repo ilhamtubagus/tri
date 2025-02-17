@@ -8,6 +8,9 @@ import (
 	"github.com/ilhamtubagus/tri/todo"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
+	"sort"
+	"text/tabwriter"
 )
 
 // listCmd represents the list command
@@ -25,7 +28,15 @@ func listRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Println(items)
+	sort.Sort(todo.ByPri(items))
+
+	w := tabwriter.NewWriter(os.Stdout, 3, 0, 1, ' ', 0)
+
+	for _, item := range items {
+		fmt.Fprintln(w, item.Label()+"\t"+item.PrettyP()+"\t"+item.Text+"\t")
+	}
+
+	w.Flush()
 }
 
 func init() {
