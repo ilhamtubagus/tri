@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 ilhamta27@gmail.com
 */
 package cmd
 
@@ -21,19 +21,31 @@ var listCmd = &cobra.Command{
 	Run:   listRun,
 }
 
+var (
+	doneOpt bool
+	allOpt  bool
+)
+
 func listRun(cmd *cobra.Command, args []string) {
 	items, err := todo.ReadItems(filename)
 	if err != nil {
 		log.Printf("Error reading todo items: %v\n", err)
 		return
 	}
+	printItems(items)
+}
 
+func printItems(items []todo.Item) {
 	sort.Sort(todo.ByPri(items))
 
 	w := tabwriter.NewWriter(os.Stdout, 3, 0, 1, ' ', 0)
 
+	fmt.Fprintln(w, "No\tPriority\tTodo\tStatus")
+	fmt.Fprintln(w, "__\t_______\t_______\t__________")
 	for _, item := range items {
-		fmt.Fprintln(w, item.Label()+"\t"+item.PrettyP()+"\t"+item.Text+"\t")
+		if allOpt || doneOpt == item.Done {
+			fmt.Fprintln(w, item.Label()+"\t"+item.PrettyP()+"\t"+item.Text+"\t"+item.PrettyStatus())
+		}
 	}
 
 	w.Flush()
@@ -41,14 +53,6 @@ func listRun(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	listCmd.Flags().BoolVarP(&doneOpt, "done", "d", false, "show only done items")
+	listCmd.Flags().BoolVarP(&allOpt, "all", "a", false, "show all items (including done)")
 }

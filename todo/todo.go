@@ -2,7 +2,6 @@ package todo
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -12,6 +11,7 @@ type Item struct {
 	Text     string `json:"text"`
 	Priority int    `json:"priority"`
 	position int
+	Done     bool `json:"done"`
 }
 
 func (i *Item) SetPriority(pri int) {
@@ -40,6 +40,13 @@ func (i *Item) Label() string {
 	return strconv.Itoa(i.position) + "."
 }
 
+func (i *Item) PrettyStatus() string {
+	if i.Done {
+		return "[V]"
+	}
+	return "[ ]"
+}
+
 type ByPri []Item
 
 func (b ByPri) Len() int {
@@ -51,11 +58,15 @@ func (b ByPri) Swap(i, j int) {
 }
 
 func (b ByPri) Less(i, j int) bool {
-	if b[i].Priority == b[j].Priority {
-		return b[i].position < b[j].position
+	if b[i].Done != b[j].Done {
+		return b[i].Done
 	}
 
-	return b[i].Priority > b[j].Priority
+	if b[i].Priority != b[j].Priority {
+		return b[i].Priority > b[j].Priority
+	}
+
+	return b[i].position > b[j].position
 }
 
 // SaveItems saves a list of todo items to a JSON file.
@@ -81,8 +92,6 @@ func SaveItems(filename string, items []Item) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(string(b))
 
 	return nil
 }
