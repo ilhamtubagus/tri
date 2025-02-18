@@ -7,6 +7,16 @@ import (
 	"strconv"
 )
 
+var (
+	osMkdirAll    = os.MkdirAll
+	osWriteFile   = os.WriteFile
+	osStat        = os.Stat
+	osReadFile    = os.ReadFile
+	filepathDir   = filepath.Dir
+	jsonMarshal   = json.Marshal
+	jsonUnmarshal = json.Unmarshal
+)
+
 type Item struct {
 	Text     string `json:"text"`
 	Priority int    `json:"priority"`
@@ -78,17 +88,17 @@ func (b ByPri) Less(i, j int) bool {
 // Returns:
 //   - error: An error if the items cannot be marshaled or the file cannot be written, nil otherwise.
 func SaveItems(filename string, items []Item) error {
-	b, err := json.Marshal(items)
+	b, err := jsonMarshal(items)
 	if err != nil {
 		return err
 	}
 
-	dir := filepath.Dir(filename)
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	dir := filepathDir(filename)
+	if err := osMkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filename, b, 0644)
+	err = osWriteFile(filename, b, 0644)
 	if err != nil {
 		return err
 	}
@@ -106,18 +116,18 @@ func SaveItems(filename string, items []Item) error {
 //   - error: An error if the file cannot be read or parsed, nil otherwise.
 
 func ReadItems(filename string) ([]Item, error) {
-	_, err := os.Stat(filename)
+	_, err := osStat(filename)
 	if err != nil {
 		return nil, nil
 	}
 
-	b, err := os.ReadFile(filename)
+	b, err := osReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	var items []Item
-	if err := json.Unmarshal(b, &items); err != nil {
+	if err := jsonUnmarshal(b, &items); err != nil {
 		return nil, err
 	}
 	for i, _ := range items {
