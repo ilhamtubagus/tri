@@ -206,3 +206,68 @@ func TestSaveItems(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func TestReadItems_OsStatErrNotExist(t *testing.T) {
+	teardown := setupSuite(t)
+	defer teardown(t)
+	osStat = func(name string) (os.FileInfo, error) {
+		return nil, os.ErrNotExist
+	}
+
+	_, err := ReadItems("filename")
+
+	assert.Nil(t, err)
+}
+
+func TestReadItems_OsStatOtherError(t *testing.T) {
+	teardown := setupSuite(t)
+	defer teardown(t)
+	osStat = func(name string) (os.FileInfo, error) {
+		return nil, os.ErrDeadlineExceeded
+	}
+
+	_, err := ReadItems("filename")
+
+	assert.Equal(t, err, os.ErrDeadlineExceeded)
+}
+
+func TestReadItems_OsReadFileError(t *testing.T) {
+	teardown := setupSuite(t)
+	defer teardown(t)
+	osReadFile = func(filename string) ([]byte, error) {
+		return nil, os.ErrPermission
+	}
+
+	_, err := ReadItems("filename")
+
+	assert.Equal(t, err, os.ErrPermission)
+}
+
+func TestReadItems_JsonUnmarshalError(t *testing.T) {
+	teardown := setupSuite(t)
+	defer teardown(t)
+	mockError := errors.New("json unmarshal error")
+	jsonUnmarshal = func(data []byte, v interface{}) error {
+		return mockError
+	}
+
+	_, err := ReadItems("filename")
+
+	assert.Equal(t, err, mockError)
+}
+
+func TestReadItems(t *testing.T) {
+	teardown := setupSuite(t)
+	defer teardown(t)
+	items := []Item{{Text: "test", Priority: 1}}
+	jsonData, _ := json.Marshal(items)
+	expectedItems := []Item{{Text: "test", Priority: 1, position: 1}}
+	osReadFile = func(filename string) ([]byte, error) {
+		return jsonData, nil
+	}
+
+	actualItems, err := ReadItems("filename")
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedItems, actualItems)
+}

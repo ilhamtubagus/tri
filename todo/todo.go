@@ -2,6 +2,7 @@ package todo
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -118,7 +119,10 @@ func SaveItems(filename string, items []Item) error {
 func ReadItems(filename string) ([]Item, error) {
 	_, err := osStat(filename)
 	if err != nil {
-		return nil, nil
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	b, err := osReadFile(filename)
